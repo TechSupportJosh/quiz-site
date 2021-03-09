@@ -1,0 +1,13 @@
+[
+  {
+    "question": "What colour is the sky?",
+    "correctAnswers": ["Blue", "Black"],
+    "incorrectAnswers": ["Orange", "Pink"],
+    "image": "purple.jpg"
+  },
+  {
+    "question": "What colour is the sea?",
+    "correctAnswers": ["Blue", "Black"],
+    "incorrectAnswers": ["Orange", "Pink"]
+  }
+]

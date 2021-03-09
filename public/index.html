@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    </head>
+    <style>
+        html, body {
+            height: 100%;
+          }
+        
+        .min-100 {
+            min-height: 100%;
+        }
+
+        #join-container
+        {
+            background-color: #E86258;
+        }
+
+        #lobby-container
+        {
+            background-color: #B9E6FF;
+        }
+
+        #pre-question-container, #mid-round-container, #question-container, #post-answers-container
+        {
+            background-color: #E4C1F9;
+        }
+
+        #scoreboard-container
+        {
+            background-color: #F3DE8A;
+        }
+
+        .full-body-container
+        {
+            min-height: 100%;
+        }
+        .full-body-container > .container
+        {
+            background-color: white; padding: 20px;
+        }
+
+        .answer-button
+        {
+            height: 70px;
+        }
+
+        #answer-container > div:nth-of-type(1) > .answer-button
+        {
+            background-color: #33b5e5
+        }
+
+        #answer-container > div:nth-of-type(2) > .answer-button
+        {
+            background-color: #00C851;
+        }
+
+        #answer-container > div:nth-of-type(3) > .answer-button
+        {
+            background-color: #ffbb33;
+        }
+
+        #answer-container > div:nth-of-type(4) > .answer-button
+        {
+            background-color: #ff4444;
+        }
+
+        .answer-button[disabled]
+        {
+            opacity: 0.35;
+        }
+
+        .answer-button.selected
+        {
+            opacity: 1;
+        }
+
+        #question-timer-container
+        {
+            font-size: 2.5rem;
+        }
+
+        #question-timer
+        {
+            border-radius: 5px;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            right: 0;
+        }
+        @keyframes progressbar {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        #question-timer-progress-bar
+        {
+            background-color: #007bff59;
+            border-radius: 10px;
+        }
+        #question-timer-progress-bar.started
+        {
+            animation: progressbar;
+            animation-duration: 30s;
+            animation-timing-function: linear;
+        }
+        #question-timer-progress-bar.finished
+        {
+            width: 100%;
+        }
+    </style>
+    <body>
+        <div class="container-fluid vh-100 p-0">
+            <div id="join-container" class="min-100 justify-content-center align-items-center" style="display: flex;">
+                <div class="container" style="background-color: white; border-radius: 5px; padding: 20px;">
+                    <h2 class="text-center mb-4">Join Game</h2>
+                    <div class="alert alert-danger" style="display: none;" id="join-game-alert"></div>
+                    <div class="input-group mb-4">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="join-username-label">Username</span>
+                        </div>
+                        <input type="text" class="form-control" id="join-username" placeholder="Username" aria-label="Username" required aria-describedby="join-username-label">
+                    </div>
+    
+                    <button id="join-game" class="btn btn-primary w-100">Join Game</button>
+                </div>
+            </div>
+            <div id="lobby-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 text-center">
+                    <h2 class="mb-4"><span id="lobby-player-count">0</span> Players Joined</h2>
+                    <div class="row mb-4" id="lobby-player-container">
+                    </div>
+                    <div class="row">
+                        <div class="col-4 offset-4">
+                            <button id="lobby-start-game" class="btn btn-success w-100">Start Game</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="mid-round-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 text-center">
+                    <h2 class="mb-4">You'll join at the next opportunity!</h2>
+                </div>
+            </div>
+            <div id="pre-question-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 text-center">
+                    <h2 class="mb-4">New question coming up in</h2>
+                    <div style="font-size: 120px; font-weight: bold;" id="pre-question-timer">
+
+                    </div>
+                </div>
+            </div>
+            <div id="question-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 text-center">
+                    <h2 class="mb-4" id="question-label"></h2>
+                    <div class="mb-4" id="question-image-container">
+                        <img style="max-height: 400px;" id="question-image"/>
+                    </div>
+                    <div class="mb-4" id="question-timer-container">
+                        <div id="question-timer">30</div>
+                        <div id="question-timer-progress-bar">&nbsp;</div>
+                    </div>
+                    <div class="row" id="answer-container">
+
+                    </div>
+                </div>
+            </div>
+            <div id="post-answers-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 text-center">
+                    <h2 class="mb-4" id="point-delta-label"></h2>
+                    <h2 class="mb-4" id="point-total-label"></h2>
+                </div>
+            </div>
+            <div id="scoreboard-container" class="full-body-container" style="display: flex;">
+                <div class="container min-100 ">
+                    <h2 class="mb-4 text-center">Scoreboard</h2>
+                    <ul class="list-group list-group-flush" style="font-size: 2rem; font-weight: bold;" id="scoreboard-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script src="/js/socket.io.js"></script>
+    <script src="/js/game.js"></script>
+</html>
