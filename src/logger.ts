@@ -8,35 +8,35 @@ const colors = {
   success: "\x1b[32m",
 };
 
-class Logger {
-  constructor(namespace) {
+type LogType = "info" | "warn" | "error" | "success";
+
+export default class Logger {
+  public readonly namespace: string;
+
+  constructor(namespace: string) {
     this.namespace = namespace;
   }
 
-  info(message) {
+  public info(message: any) {
     this.doLog(message, "info");
   }
 
-  warn(message) {
+  public warn(message: any) {
     this.doLog(message, "warn");
   }
 
-  error(message) {
+  public error(message: any) {
     this.doLog(message, "error");
   }
 
-  success(message) {
+  public success(message: any) {
     this.doLog(message, "success");
   }
 
-  doLog(message, level) {
+  private doLog(message: any, level: LogType) {
     const color = colors[level];
     const dateTime = new Date().toLocaleTimeString("en-GB");
 
-    console.log(
-      `[${dateTime}] <\x1b[34m${this.namespace}\x1b[0m> ${color}${message}\x1b[0m`
-    );
+    console.log(`[${dateTime}] <\x1b[34m${this.namespace}\x1b[0m> ${color}${message}\x1b[0m`);
   }
 }
-
-module.exports = Logger;
