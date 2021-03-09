@@ -1,10 +1,15 @@
+import "reflect-metadata";
 import express from "express";
 import Logger from "./logger";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { sleep, shuffleArray } from "./utils";
+import { validateAsClass } from "joiful";
+import path from "path";
 
 import { GameState, Phase } from "./types/gameState";
+import { JoinGameDTO } from "./types/joinGame.dto";
+import { AnswerDTO } from "./types/answer.dto";
 
 const app = express();
 const httpServer = createServer(app);
@@ -111,21 +116,24 @@ async function sendQuestion() {
 }
 
 function validateUsername(username: string) {
-  if (typeof username !== "string") return "Username must be a string!";
-
-  const name = username.trim();
-
-  if (name.length < 1 || name.length > 24) return "Username must be between 1 and 24 characters!";
-
   // TODO: Additional name restrictions?
-  const existingPlayer = state.players.find((player) => player.username === name);
+  const existingPlayer = state.players.find((player) => player.username === username);
   if (existingPlayer) return "Someone is already playing with this username!";
 
   return undefined;
 }
 
 io.on("connection", (socket: Socket) => {
-  socket.on("join-game", (data) => {
+  socket.on("join-game", (rawData) => {
+    const result = validateAsClass(rawData, JoinGameDTO);
+
+    if (result.error)
+      return socket.emit("join-game-response", {
+        error: result.error.details.map((e) => e.message).join("<br>"),
+      });
+
+    const data = result.value;
+
     const usernameValidationError = validateUsername(data.username);
     if (usernameValidationError)
       return socket.emit("join-game-response", {
@@ -160,7 +168,7 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
-  socket.on("start-game", (data) => {
+  socket.on("start-game", () => {
     // If the game has already started, ignore this event
     if (state.phase !== Phase.Lobby) return;
 
@@ -168,17 +176,23 @@ io.on("connection", (socket: Socket) => {
     sendQuestion();
   });
 
-  socket.on("answer", (data) => {
+  socket.on("answer", (rawData) => {
     if (state.phase !== Phase.Question) return;
+
+    const player = state.players.find((player) => player.socketId == socket.id);
+    if (!player) return gameLogger.warn("Received answer from player that does not exist");
+
+    const result = validateAsClass(rawData, AnswerDTO);
+
+    if (result.error) return gameLogger.warn(`Received invalid answer from ${player.username}: ${result.error.annotate()}`);
+
+    const data = result.value;
 
     // Check whether this answer is a valid answer for the question
     const question = questions[state.currentQuestion.index];
     const answers = [...question.correctAnswers, ...question.incorrectAnswers];
-    const player = state.players.find((player) => player.socketId == socket.id);
 
-    if (!player) return gameLogger.warn("Received answer from player that does not exist");
-
-    if (!answers.includes(data.answer)) return gameLogger.warn(`Received non-valid answer from ${player.username}`);
+    if (!answers.includes(data.answer)) return gameLogger.warn(`Received unknown answer from ${player.username}`);
 
     if (state.currentQuestion.answers.has(player.username)) return gameLogger.warn(`Received multiple answers from ${player.username}`);
 
@@ -191,7 +205,7 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(path.resolve(__dirname + "/../public")));
 
 httpServer.listen(3000, () => {
   serverLogger.info("Listening on port 3000");
