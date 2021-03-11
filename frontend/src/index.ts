@@ -1,7 +1,7 @@
 // Creater socket
 import { io } from "socket.io-client";
 
-const socketUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "/socket.io";
+const socketUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "";
 console.log(socketUrl);
 const socket = io(socketUrl);
 
