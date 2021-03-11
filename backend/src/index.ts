@@ -1,22 +1,31 @@
 import "reflect-metadata";
-import express from "express";
 import Logger from "./logger";
 import { createServer } from "http";
-import { Server, Socket } from "socket.io";
+import { Server, ServerOptions, Socket } from "socket.io";
 import { sleep, shuffleArray } from "./utils";
 import { validateAsClass } from "joiful";
-import path from "path";
 
 import { GameState, Phase } from "./types/gameState";
 import { JoinGameDTO } from "./types/joinGame.dto";
 import { AnswerDTO } from "./types/answer.dto";
 
-const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer);
-
 const serverLogger = new Logger("Server");
 const gameLogger = new Logger("Game");
+
+const httpServer = createServer();
+const ioOptions: Partial<ServerOptions> = {};
+
+// For development, allow requests from localhost:1234 (parcel serve)
+if (process.env.NODE_ENV === "development") {
+  ioOptions.cors = {
+    origin: "http://localhost:1234",
+    methods: ["GET", "POST"],
+  };
+
+  serverLogger.info("Starting server in development mode");
+}
+
+const io = new Server(httpServer, ioOptions);
 
 const questions = require("../quiz.json");
 
@@ -204,8 +213,6 @@ io.on("connection", (socket: Socket) => {
     });
   });
 });
-
-app.use(express.static(path.resolve(__dirname + "/../public")));
 
 httpServer.listen(3000, () => {
   serverLogger.info("Listening on port 3000");
